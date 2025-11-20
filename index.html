@@ -17,8 +17,7 @@
 
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
-            background:
-                radial-gradient(circle at top, #FFF7FF 0%, #F3F8FF 40%, #E8F1FF 100%);
+            background: radial-gradient(circle at top, #FFF7FF 0%, #F3F8FF 40%, #E8F1FF 100%);
             overflow: hidden;
         }
 
@@ -27,9 +26,10 @@
             inset: 0;
             background: linear-gradient(
                 135deg,
-                rgba(255, 255, 255, 0.95),
-                rgba(249, 237, 255, 0.98)
+                rgba(255, 255, 255, 0.96),
+                rgba(249, 237, 255, 0.99)
             );
+            z-index: 0;
         }
 
         .app {
@@ -37,30 +37,29 @@
             width: 100%;
             height: 100%;
             padding: 24px;
+            z-index: 1;
         }
 
         .notes-layer {
             position: relative;
             width: 100%;
             height: 100%;
+            z-index: 1;
         }
 
         .note {
             position: absolute;
-            width: 220px;
-            height: 140px;
-            border-radius: 18px;
-            padding: 12px 14px;
-            background: #fff;
-            box-shadow:
-                0 16px 40px rgba(154, 119, 193, 0.16);
+            width: 180px;
+            height: 110px;
+            border-radius: 16px;
+            padding: 0;
+            background: transparent;
+            box-shadow: none;
+            transform: translate3d(0, 24px, 0) scale(0.86) rotate(0deg);
             opacity: 0;
-            transform: translate3d(0, 20px, 0) scale(0.96) rotate(0deg);
             transition:
-                opacity 0.55s ease-out,
-                transform 0.8s cubic-bezier(0.19, 1, 0.22, 1),
-                left 0.8s ease-in-out,
-                top 0.8s ease-in-out;
+                opacity 1.2s ease-out,
+                transform 1.45s cubic-bezier(0.19, 1, 0.22, 1);
         }
 
         .note.visible {
@@ -76,13 +75,12 @@
             padding: 10px 14px;
             background: linear-gradient(
                 145deg,
-                rgba(255, 255, 255, 0.65),
-                rgba(255, 244, 255, 0.98)
+                rgba(255, 255, 255, 0.96),
+                rgba(255, 249, 255, 0.99)
             );
-            box-shadow:
-                0 0 0 1px rgba(255, 255, 255, 0.7),
-                0 18px 35px rgba(148, 123, 187, 0.24);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 24px rgba(148, 123, 187, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(6px);
         }
 
         .note-title {
@@ -100,59 +98,20 @@
             line-height: 1.6;
             word-break: break-all;
         }
-
-        .note-heart {
-            z-index: 5;
-        }
-
-        .center-text {
-            position: fixed;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, calc(-50% - 80px));
-            padding: 18px 36px;
-            border-radius: 999px;
-            background: radial-gradient(
-                circle at top,
-                rgba(255, 255, 255, 0.96),
-                rgba(245, 225, 255, 0.94)
-            );
-            box-shadow: 0 24px 60px rgba(135, 92, 173, 0.4);
-            color: #f66fa2;
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-align: center;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            backdrop-filter: blur(18px);
-            text-shadow: 0 0 22px rgba(255, 153, 204, 0.8);
-            transition:
-                opacity 1s ease-out,
-                transform 1s ease-out;
-        }
-
-        .center-text.visible {
-            opacity: 1;
-            transform: translate(-50%, calc(-50% - 80px)) scale(1.02);
-        }
     </style>
 </head>
 <body>
     <div class="app-bg"></div>
     <div class="app">
         <div class="notes-layer" id="notes-layer"></div>
-        <div class="center-text" id="center-text">要每天都开开心心呀</div>
     </div>
 
     <script>
         (function () {
-            const NOTE_WIDTH = 220;
-            const NOTE_HEIGHT = 140;
-            const NOTE_COUNT = 80;
-            const CREATE_INTERVAL = 90; // ms
-            const HEART_DELAY = 1200;
+            const NOTE_WIDTH = 180;
+            const NOTE_HEIGHT = 110;
+            const NOTE_COUNT = 60;
+            const CREATE_INTERVAL = 420; // 每张便签出现间隔（毫秒）
 
             const COLORS = [
                 '#FFEAF4',
@@ -199,104 +158,78 @@
                 return result;
             }
 
-            function generateScatterPositions(count, width, height) {
-                const positions = [];
-                const cols = Math.max(1, Math.floor(width / (NOTE_WIDTH + 40)));
-                const cellWidth = width / cols;
-                const rows = Math.ceil(count / cols);
-                const cellHeight = height / rows;
-
-                for (let index = 0; index < count; index += 1) {
-                    const col = index % cols;
-                    const row = Math.floor(index / cols);
-                    const jitterX = (cellWidth - NOTE_WIDTH) / 2;
-                    const jitterY = (cellHeight - NOTE_HEIGHT) / 2;
-                    const baseX = col * cellWidth + jitterX;
-                    const baseY = row * cellHeight + jitterY;
-                    const x = baseX + (Math.random() - 0.5) * jitterX;
-                    const y = baseY + (Math.random() - 0.5) * jitterY;
-                    positions.push({ x, y });
-                }
-
-                for (let index = positions.length - 1; index > 0; index -= 1) {
-                    const swapIndex = Math.floor(Math.random() * (index + 1));
-                    const temp = positions[index];
-                    positions[index] = positions[swapIndex];
-                    positions[swapIndex] = temp;
-                }
-                return positions;
-            }
-
-            const GLOW_PADDING = 32;
+            const HEART_MARGIN = 90;
 
             function generateHeartPositions(count, width, height) {
                 const positions = [];
+
+                const usableWidth = width - 2 * HEART_MARGIN - NOTE_WIDTH;
+                const usableHeight = height - 2 * HEART_MARGIN - NOTE_HEIGHT;
+
                 const baseScale = Math.min(
-                    (width - 4 * GLOW_PADDING - NOTE_WIDTH) / 32,
-                    (height - 6 * GLOW_PADDING - NOTE_HEIGHT) / 30,
+                    usableWidth / 34,
+                    usableHeight / 32,
                 );
-                const clampedScale = Math.max(18, Math.min(baseScale, 40));
-                const scaleX = clampedScale * 1.05;
-                const scaleY = clampedScale * 1.15;
+
+                // 加宽、略压扁，让爱心更“胖”
+                const scaleX = baseScale * 1.22;
+                const scaleY = baseScale * 0.98;
+
                 const offsetX = width / 2;
-                const offsetY = height / 2 - 90;
+                const offsetY = height / 2 - 10;
 
-                for (let index = 0; index < count; index += 1) {
-                    const angle = (index / count) * Math.PI * 2;
-                    const xBase = 16 * Math.sin(angle) ** 3;
+                const rings = 3;
+                const ringFactors = [1.02, 0.92, 0.84];
+
+                for (let i = 0; i < count; i += 1) {
+                    const ringIndex = i % rings;
+                    const radial = ringFactors[ringIndex];
+                    const t = (i / count) * Math.PI * 2;
+
+                    const xBase = 16 * Math.sin(t) ** 3;
                     const yBase =
-                        13 * Math.cos(angle)
-                        - 5 * Math.cos(2 * angle)
-                        - 2 * Math.cos(3 * angle)
-                        - Math.cos(4 * angle);
+                        13 * Math.cos(t)
+                        - 5 * Math.cos(2 * t)
+                        - 2 * Math.cos(3 * t)
+                        - Math.cos(4 * t);
 
-                    const fillFactor = 0.7 + Math.random() * 0.3;
-                    const x = xBase * fillFactor;
-                    const y = yBase * fillFactor;
+                    const jitter = 0.96 + (Math.random() - 0.5) * 0.06;
+                    const x = xBase * radial * jitter;
+                    const y = yBase * radial * jitter;
 
-                    let xPos = offsetX + x * scaleX - NOTE_WIDTH / 2;
-                    let yPos = offsetY - y * scaleY - NOTE_HEIGHT / 2;
-
-                    xPos = Math.max(GLOW_PADDING, Math.min(xPos, width - NOTE_WIDTH - GLOW_PADDING));
-                    yPos = Math.max(GLOW_PADDING, Math.min(yPos, height - NOTE_HEIGHT - GLOW_PADDING));
+                    const xPos = offsetX + x * scaleX - NOTE_WIDTH / 2;
+                    const yPos = offsetY - y * scaleY - NOTE_HEIGHT / 2;
 
                     positions.push({ x: xPos, y: yPos });
                 }
+
                 return positions;
             }
 
             function createWall() {
                 const layer = document.getElementById('notes-layer');
-                const centerText = document.getElementById('center-text');
                 layer.innerHTML = '';
-                centerText.classList.remove('visible');
 
                 const width = window.innerWidth;
                 const height = window.innerHeight;
 
-                const messages =
-                    pickMessages(NOTE_COUNT);
-                const scatterPositions =
-                    generateScatterPositions(NOTE_COUNT, width, height);
-                const heartPositions =
-                    generateHeartPositions(NOTE_COUNT, width, height);
-
-                const notes = [];
+                const messages = pickMessages(NOTE_COUNT);
+                const heartPositions = generateHeartPositions(NOTE_COUNT, width, height);
 
                 messages.forEach((text, index) => {
                     const delay = index * CREATE_INTERVAL;
                     setTimeout(() => {
                         const noteElement = document.createElement('div');
                         noteElement.className = 'note';
-                        noteElement.style.left = `${scatterPositions[index].x}px`;
-                        noteElement.style.top = `${scatterPositions[index].y}px`;
+                        noteElement.style.left = `${heartPositions[index].x}px`;
+                        noteElement.style.top = `${heartPositions[index].y}px`;
 
-                        const rotate = (Math.random() * 14 - 7).toFixed(2);
+                        const rotate = (Math.random() * 10 - 5).toFixed(2);
                         noteElement.style.setProperty('--note-rotate', `${rotate}deg`);
 
                         const inner = document.createElement('div');
                         inner.className = 'note-inner';
-                        inner.style.background = `linear-gradient(145deg, rgba(255,255,255,0.75), ${COLORS[index % COLORS.length]})`;
+                        inner.style.background = `linear-gradient(145deg, rgba(255,255,255,0.96), ${COLORS[index % COLORS.length]})`;
 
                         const title = document.createElement('div');
                         title.className = 'note-title';
@@ -314,31 +247,8 @@
                         requestAnimationFrame(() => {
                             noteElement.classList.add('visible');
                         });
-
-                        notes.push({
-                            el: noteElement,
-                            target: heartPositions[index],
-                        });
                     }, delay);
                 });
-
-                const mergeAt = NOTE_COUNT * CREATE_INTERVAL + HEART_DELAY;
-                setTimeout(() => {
-                    notes.forEach((item, index) => {
-                        const extraDelay = index * 8;
-                        setTimeout(() => {
-                            item.el.classList.add('note-heart');
-                            item.el.style.left = `${item.target.x}px`;
-                            item.el.style.top = `${item.target.y}px`;
-                            const softRotate = (Math.random() * 6 - 3).toFixed(2);
-                            item.el.style.setProperty('--note-rotate', `${softRotate}deg`);
-                        }, extraDelay);
-                    });
-
-                    setTimeout(() => {
-                        centerText.classList.add('visible');
-                    }, 900);
-                }, mergeAt);
             }
 
             window.addEventListener('load', createWall);

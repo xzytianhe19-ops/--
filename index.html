@@ -49,17 +49,19 @@
 
         .note {
             position: absolute;
-            width: 180px;
-            height: 110px;
+            width: 260px;
+            height: 160px;
             border-radius: 16px;
             padding: 0;
             background: transparent;
             box-shadow: none;
-            transform: translate3d(0, 24px, 0) scale(0.86) rotate(0deg);
+            transform: translate3d(0, 24px, 0) scale(0.9) rotate(0deg);
             opacity: 0;
             transition:
-                opacity 1.2s ease-out,
-                transform 1.45s cubic-bezier(0.19, 1, 0.22, 1);
+                opacity 0.6s ease-out,
+                transform 0.9s cubic-bezier(0.19, 1, 0.22, 1),
+                left 0.55s ease-in-out,
+                top 0.55s ease-in-out;
         }
 
         .note.visible {
@@ -93,7 +95,7 @@
 
         .note-body {
             margin-top: 8px;
-            font-size: 14px;
+            font-size: 16px;
             color: #5e4768;
             line-height: 1.6;
             word-break: break-all;
@@ -108,10 +110,12 @@
 
     <script>
         (function () {
-            const NOTE_WIDTH = 180;
-            const NOTE_HEIGHT = 110;
-            const NOTE_COUNT = 60;
-            const CREATE_INTERVAL = 420; // 每张便签出现间隔（毫秒）
+            const NOTE_WIDTH = 260;
+            const NOTE_HEIGHT = 160;
+            const NOTE_COUNT = 80;
+            const CREATE_INTERVAL = 150; // 与 love_notes.py 默认 interval 对齐
+            const HEART_DELAY_MS = 250;
+            const NOTE_PADDING = 22;
 
             const COLORS = [
                 '#FFEAF4',
@@ -158,33 +162,63 @@
                 return result;
             }
 
-            const HEART_MARGIN = 90;
+            // 等价于 love_notes.py 的 generate_positions
+            function generateScatterPositions(count, width, height) {
+                const positions = [];
+                if (count <= 0) return positions;
 
+                const cols = Math.max(1, Math.floor(width / (NOTE_WIDTH + 40)));
+                const rows = Math.ceil(count / cols);
+
+                const cellWidth = width / cols;
+                const cellHeight = height / rows;
+
+                for (let index = 0; index < count; index += 1) {
+                    const col = index % cols;
+                    const row = Math.floor(index / cols);
+
+                    const jitterX = (cellWidth - NOTE_WIDTH) / 2;
+                    const jitterY = (cellHeight - NOTE_HEIGHT) / 2;
+
+                    let x = col * cellWidth + (Math.random() * 2 - 1) * jitterX + jitterX;
+                    let y = row * cellHeight + (Math.random() * 2 - 1) * jitterY + jitterY;
+
+                    x = Math.max(NOTE_PADDING, Math.min(x, width - NOTE_WIDTH - NOTE_PADDING));
+                    y = Math.max(NOTE_PADDING, Math.min(y, height - NOTE_HEIGHT - NOTE_PADDING));
+
+                    positions.push({ x, y });
+                }
+
+                // 打乱顺序
+                for (let i = positions.length - 1; i > 0; i -= 1) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    const tmp = positions[i];
+                    positions[i] = positions[j];
+                    positions[j] = tmp;
+                }
+
+                return positions;
+            }
+
+            // 等价于 love_notes.py 的 generate_heart_positions
             function generateHeartPositions(count, width, height) {
                 const positions = [];
+                if (count <= 0) return positions;
 
-                const usableWidth = width - 2 * HEART_MARGIN - NOTE_WIDTH;
-                const usableHeight = height - 2 * HEART_MARGIN - NOTE_HEIGHT;
+                const usableWidth = width - 4 * NOTE_PADDING - NOTE_WIDTH;
+                const usableHeight = height - 4 * NOTE_PADDING - NOTE_HEIGHT;
 
-                const baseScale = Math.min(
-                    usableWidth / 34,
-                    usableHeight / 32,
-                );
+                const baseScale = Math.min(usableWidth / 34, usableHeight / 32);
+                const clamped = Math.max(14, Math.min(baseScale, 36));
 
-                // 加宽、略压扁，让爱心更“胖”
-                const scaleX = baseScale * 1.22;
-                const scaleY = baseScale * 0.98;
+                const scaleX = clamped * 1.22;
+                const scaleY = clamped * 0.98;
 
                 const offsetX = width / 2;
-                const offsetY = height / 2 - 10;
+                const offsetY = height / 2 - 80;
 
-                const rings = 3;
-                const ringFactors = [1.02, 0.92, 0.84];
-
-                for (let i = 0; i < count; i += 1) {
-                    const ringIndex = i % rings;
-                    const radial = ringFactors[ringIndex];
-                    const t = (i / count) * Math.PI * 2;
+                for (let index = 0; index < count; index += 1) {
+                    const t = (index / count) * Math.PI * 2;
 
                     const xBase = 16 * Math.sin(t) ** 3;
                     const yBase =
@@ -193,9 +227,9 @@
                         - 2 * Math.cos(3 * t)
                         - Math.cos(4 * t);
 
-                    const jitter = 0.96 + (Math.random() - 0.5) * 0.06;
-                    const x = xBase * radial * jitter;
-                    const y = yBase * radial * jitter;
+                    const radial = 0.94 + Math.random() * 0.08;
+                    const x = xBase * radial;
+                    const y = yBase * radial;
 
                     const xPos = offsetX + x * scaleX - NOTE_WIDTH / 2;
                     const yPos = offsetY - y * scaleY - NOTE_HEIGHT / 2;
@@ -214,17 +248,20 @@
                 const height = window.innerHeight;
 
                 const messages = pickMessages(NOTE_COUNT);
+                const scatterPositions = generateScatterPositions(NOTE_COUNT, width, height);
                 const heartPositions = generateHeartPositions(NOTE_COUNT, width, height);
+
+                const notes = [];
 
                 messages.forEach((text, index) => {
                     const delay = index * CREATE_INTERVAL;
                     setTimeout(() => {
                         const noteElement = document.createElement('div');
                         noteElement.className = 'note';
-                        noteElement.style.left = `${heartPositions[index].x}px`;
-                        noteElement.style.top = `${heartPositions[index].y}px`;
+                        noteElement.style.left = `${scatterPositions[index].x}px`;
+                        noteElement.style.top = `${scatterPositions[index].y}px`;
 
-                        const rotate = (Math.random() * 10 - 5).toFixed(2);
+                        const rotate = (Math.random() * 14 - 7).toFixed(2);
                         noteElement.style.setProperty('--note-rotate', `${rotate}deg`);
 
                         const inner = document.createElement('div');
@@ -247,8 +284,26 @@
                         requestAnimationFrame(() => {
                             noteElement.classList.add('visible');
                         });
+
+                        notes.push({
+                            el: noteElement,
+                            target: heartPositions[index],
+                        });
                     }, delay);
                 });
+
+                const mergeAt = NOTE_COUNT * CREATE_INTERVAL + HEART_DELAY_MS;
+                setTimeout(() => {
+                    notes.forEach((item, index) => {
+                        const extraDelay = index * 12;
+                        setTimeout(() => {
+                            item.el.style.left = `${item.target.x}px`;
+                            item.el.style.top = `${item.target.y}px`;
+                            const softRotate = (Math.random() * 6 - 3).toFixed(2);
+                            item.el.style.setProperty('--note-rotate', `${softRotate}deg`);
+                        }, extraDelay);
+                    });
+                }, mergeAt);
             }
 
             window.addEventListener('load', createWall);

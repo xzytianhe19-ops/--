@@ -47,14 +47,32 @@
             z-index: 1;
         }
 
+        /* 背景发光爱心（只做视觉，不影响便签坐标） */
+        .heart-glow {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(70vw, 620px);
+            height: min(60vh, 520px);
+            transform: translate(-50%, -55%);
+            pointer-events: none;
+            opacity: 0.75;
+            filter: blur(18px);
+            background:
+                radial-gradient(circle at 30% 25%, rgba(255, 192, 203, 0.36), transparent 55%),
+                radial-gradient(circle at 70% 20%, rgba(255, 182, 222, 0.4), transparent 58%),
+                radial-gradient(circle at 50% 78%, rgba(255, 153, 204, 0.46), transparent 55%);
+            animation: glow-pulse 6s ease-in-out infinite;
+        }
+
         .note {
             position: absolute;
             width: 260px;
             height: 160px;
-            border-radius: 16px;
+            border-radius: 18px;
             padding: 0;
             background: transparent;
-            box-shadow: none;
+            box-shadow: 0 16px 40px rgba(154, 119, 193, 0.18);
             transform: translate3d(0, 24px, 0) scale(0.9) rotate(0deg);
             opacity: 0;
             transition:
@@ -73,15 +91,17 @@
             position: relative;
             width: 100%;
             height: 100%;
-            border-radius: 16px;
+            border-radius: 18px;
             padding: 10px 14px;
             background: linear-gradient(
                 145deg,
                 rgba(255, 255, 255, 0.96),
                 rgba(255, 249, 255, 0.99)
             );
-            box-shadow: 0 10px 24px rgba(148, 123, 187, 0.22);
-            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.85),
+                0 18px 35px rgba(148, 123, 187, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(6px);
         }
 
@@ -100,11 +120,120 @@
             line-height: 1.6;
             word-break: break-all;
         }
+
+        .note-inner:hover {
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.95),
+                0 22px 45px rgba(148, 123, 187, 0.35);
+            transform: translate3d(0, -4px, 0);
+        }
+
+        /* 开始按钮面板 */
+        .start-panel {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.85), rgba(244, 228, 255, 0.92));
+            z-index: 2;
+            transition: opacity 0.6s ease-out;
+        }
+
+        .start-panel.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .start-card {
+            padding: 26px 38px 28px;
+            border-radius: 26px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(255, 240, 250, 0.98));
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.9),
+                0 24px 60px rgba(148, 123, 187, 0.35);
+            text-align: center;
+            max-width: 380px;
+            backdrop-filter: blur(16px);
+            animation: float-up 6s ease-in-out infinite;
+        }
+
+        .start-title {
+            font-size: 20px;
+            background: linear-gradient(120deg, #ff6ba2, #ff9ad6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: 0.12em;
+        }
+
+        .start-sub {
+            font-size: 14px;
+            color: #7f678f;
+            margin-bottom: 18px;
+        }
+
+        .start-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 26px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #ff7bab, #ffb3d4);
+            color: #ffffff;
+            font-size: 14px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 10px 28px rgba(255, 122, 171, 0.6);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 34px rgba(255, 122, 171, 0.7);
+        }
+
+        .start-btn::before {
+            content: '❤';
+            font-size: 14px;
+            margin-right: 6px;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% {
+                opacity: 0.65;
+                transform: translate(-50%, -55%) scale(1);
+            }
+            50% {
+                opacity: 0.9;
+                transform: translate(-50%, -55%) scale(1.04);
+            }
+        }
+
+        @keyframes float-up {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-6px);
+            }
+        }
     </style>
 </head>
 <body>
     <div class="app-bg"></div>
     <div class="app">
+        <div class="heart-glow"></div>
+        <div class="start-panel" id="start-panel">
+            <div class="start-card">
+                <div class="start-title">收一封小心意</div>
+                <div class="start-sub">点一下，看看今天的便签都写了什么</div>
+                <button class="start-btn" id="start-btn">打开便签</button>
+            </div>
+        </div>
         <div class="notes-layer" id="notes-layer"></div>
     </div>
 
@@ -211,11 +340,12 @@
                 const baseScale = Math.min(usableWidth / 34, usableHeight / 32);
                 const clamped = Math.max(14, Math.min(baseScale, 36));
 
-                const scaleX = clamped * 1.22;
-                const scaleY = clamped * 0.98;
+                // 稍微收窄一点、拉高一点，让爱心更修长
+                const scaleX = clamped * 1.08;
+                const scaleY = clamped * 1.08;
 
                 const offsetX = width / 2;
-                const offsetY = height / 2 - 80;
+                const offsetY = height / 2 - 70;
 
                 for (let index = 0; index < count; index += 1) {
                     const t = (index / count) * Math.PI * 2;
@@ -306,12 +436,25 @@
                 }, mergeAt);
             }
 
-            window.addEventListener('load', createWall);
-            window.addEventListener('resize', () => {
-                createWall();
-            });
+            function setupStartButton() {
+                const startPanel = document.getElementById('start-panel');
+                const startBtn = document.getElementById('start-btn');
+
+                if (!startPanel || !startBtn) {
+                    createWall();
+                    window.addEventListener('resize', () => createWall());
+                    return;
+                }
+
+                startBtn.addEventListener('click', () => {
+                    startPanel.classList.add('hidden');
+                    createWall();
+                    window.addEventListener('resize', () => createWall());
+                });
+            }
+
+            window.addEventListener('load', setupStartButton);
         }());
     </script>
 </body>
 </html>
-

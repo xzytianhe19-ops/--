@@ -1,199 +1,352 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
+<head>
     <meta charset="utf-8">
-    <title>小小便利贴 · Love Notes</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Love Notes - Web</title>
     <style>
-      :root {
-        color-scheme: light dark;
-        --bg: #f8fafc;
-        --card-bg: #ffffff;
-        --accent: #f97373;
-        --accent-soft: #ffe4e4;
-        --text-main: #111827;
-        --text-sub: #6b7280;
-        --border-soft: #e5e7eb;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          "Microsoft YaHei", sans-serif;
-        background: radial-gradient(circle at top left, #ffe4e4 0, #f8fafc 40%, #e0f2fe 100%);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 32px 16px;
-        color: var(--text-main);
-      }
-      .shell {
-        max-width: 860px;
-        width: 100%;
-        background: rgba(255, 255, 255, 0.92);
-        border-radius: 24px;
-        box-shadow:
-          0 24px 60px rgba(15, 23, 42, 0.18),
-          0 0 0 1px rgba(148, 163, 184, 0.18);
-        padding: 28px 26px 26px;
-        backdrop-filter: blur(18px);
-      }
-      h1 {
-        margin: 0;
-        font-size: 26px;
-        letter-spacing: 0.03em;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      h1 span.badge {
-        font-size: 12px;
-        padding: 3px 10px;
-        border-radius: 999px;
-        background: var(--accent-soft);
-        color: var(--accent);
-        border: 1px solid var(--accent);
-      }
-      .subtitle {
-        margin-top: 8px;
-        font-size: 14px;
-        color: var(--text-sub);
-      }
-      .grid {
-        margin-top: 22px;
-        display: grid;
-        gap: 16px;
-      }
-      @media (min-width: 720px) {
-        .grid {
-          grid-template-columns: minmax(0, 3fr) minmax(0, 2.3fr);
+        * {
+            box-sizing: border-box;
         }
-      }
-      .card {
-        background: var(--card-bg);
-        border-radius: 18px;
-        padding: 18px 18px 16px;
-        border: 1px solid var(--border-soft);
-      }
-      .card-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 8px;
-      }
-      .card-desc {
-        font-size: 13px;
-        color: var(--text-sub);
-        line-height: 1.7;
-      }
-      .list {
-        margin: 10px 0 0;
-        padding-left: 20px;
-        font-size: 13px;
-        color: var(--text-sub);
-        line-height: 1.7;
-      }
-      .list code {
-        font-size: 12px;
-        background: #f9fafb;
-        border-radius: 999px;
-        padding: 2px 6px;
-      }
-      .pill-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 10px;
-      }
-      .pill {
-        font-size: 12px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: #f9fafb;
-        border: 1px dashed #e5e7eb;
-        color: #4b5563;
-      }
-      footer {
-        margin-top: 18px;
-        font-size: 11px;
-        color: #9ca3af;
-        text-align: right;
-      }
-      a {
-        color: #2563eb;
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top, #FFF7FF 0%, #F3F8FF 40%, #E8F1FF 100%);
+            overflow: hidden;
+        }
+
+        .app-bg {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.95),
+                rgba(249, 237, 255, 0.98)
+            );
+        }
+
+        .app {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 24px;
+        }
+
+        .notes-layer {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .note {
+            position: absolute;
+            width: 220px;
+            height: 140px;
+            border-radius: 18px;
+            padding: 12px 14px;
+            background: #fff;
+            box-shadow:
+                0 16px 40px rgba(154, 119, 193, 0.16);
+            opacity: 0;
+            transform: translate3d(0, 20px, 0) scale(0.96) rotate(0deg);
+            transition:
+                opacity 0.55s ease-out,
+                transform 0.8s cubic-bezier(0.19, 1, 0.22, 1),
+                left 0.8s ease-in-out,
+                top 0.8s ease-in-out;
+        }
+
+        .note.visible {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(var(--note-rotate, -3deg));
+        }
+
+        .note-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            padding: 10px 14px;
+            background: linear-gradient(
+                145deg,
+                rgba(255, 255, 255, 0.65),
+                rgba(255, 244, 255, 0.98)
+            );
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.7),
+                0 18px 35px rgba(148, 123, 187, 0.24);
+            backdrop-filter: blur(10px);
+        }
+
+        .note-title {
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #9c7ac4;
+            opacity: 0.9;
+        }
+
+        .note-body {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #5e4768;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+
+        .note-heart {
+            z-index: 5;
+        }
+
+        .center-text {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, calc(-50% - 80px));
+            padding: 18px 36px;
+            border-radius: 999px;
+            background: radial-gradient(
+                circle at top,
+                rgba(255, 255, 255, 0.96),
+                rgba(245, 225, 255, 0.94)
+            );
+            box-shadow: 0 24px 60px rgba(135, 92, 173, 0.4);
+            color: #f66fa2;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-align: center;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            backdrop-filter: blur(18px);
+            text-shadow: 0 0 22px rgba(255, 153, 204, 0.8);
+            transition:
+                opacity 1s ease-out,
+                transform 1s ease-out;
+        }
+
+        .center-text.visible {
+            opacity: 1;
+            transform: translate(-50%, calc(-50% - 80px)) scale(1.02);
+        }
     </style>
-  </head>
-  <body>
-    <main class="shell">
-      <header>
-        <h1>
-          小小便利贴
-          <span class="badge">Desktop · Python · Tkinter</span>
-        </h1>
-        <p class="subtitle">
-          这不是网页小程序，而是可以在电脑桌面上弹出暖心便签的 Python 小工具。GitHub Pages 只负责托管这个说明页面，
-          真正的程序需要在本地运行。
-        </p>
-      </header>
+</head>
+<body>
+    <div class="app-bg"></div>
+    <div class="app">
+        <div class="notes-layer" id="notes-layer"></div>
+        <div class="center-text" id="center-text">要每天都开开心心呀</div>
+    </div>
 
-      <section class="grid">
-        <article class="card">
-          <div class="card-title">如何运行「暖心便利贴」程序？</div>
-          <p class="card-desc">
-            仓库中目前有两个主程序文件：
-          </p>
-          <ul class="list">
-            <li><code>love_notes.py</code> – 新版暖心便签，更多优化和文案</li>
-            <li><code>sticky_notes.py</code> – 初版便利贴效果</li>
-          </ul>
-          <p class="card-desc">
-            在 Windows 上的推荐使用方式：
-          </p>
-          <ol class="list">
-            <li>先安装 <strong>Python 3.10+</strong>
-              （从 <a href="https://www.python.org/downloads/" target="_blank">python.org</a> 安装）。
-            </li>
-            <li>把这个仓库克隆或下载到本地，例如桌面某个文件夹。</li>
-            <li>在该文件夹空白处按住 <code>Shift</code> 并右键 → 选择“在终端中打开”。</li>
-            <li>在终端中输入：<code>python love_notes.py</code> 然后回车。</li>
-          </ol>
-          <p class="card-desc">
-            如果系统里有多个 Python 版本，可以尝试 <code>python3</code> 或 <code>py</code> 命令。
-          </p>
-        </article>
+    <script>
+        (function () {
+            const NOTE_WIDTH = 220;
+            const NOTE_HEIGHT = 140;
+            const NOTE_COUNT = 80;
+            const CREATE_INTERVAL = 90; // ms
+            const HEART_DELAY = 1200;
 
-        <aside class="card">
-          <div class="card-title">小提示 & 自定义文案</div>
-          <p class="card-desc">
-            程序内置了一些中文暖心句子，你也可以自己准备一份
-            <code>.txt</code> 文件，每一行是一条小句子，然后在终端中使用：
-          </p>
-          <p class="card-desc">
-            <code>python love_notes.py --messages 我的文案.txt</code>
-          </p>
-          <p class="card-desc">
-            这样每次弹出的便利贴，就会随机从你提供的文案中选择一条。
-          </p>
-          <div class="pill-row">
-            <div class="pill">随机颜色小便签</div>
-            <div class="pill">渐隐渐显动画</div>
-            <div class="pill">可拖拽移动</div>
-            <div class="pill">支持自定义文案</div>
-          </div>
-        </aside>
-      </section>
+            const COLORS = [
+                '#FFEAF4',
+                '#F5E9FF',
+                '#EAF6FF',
+                '#EFFFF6',
+                '#FFF5E9',
+                '#FDEBFF',
+                '#F3F8FF',
+                '#FFEFF5',
+                '#E9FFF5',
+                '#FFF9FF',
+            ];
 
-      <footer>
-        部署于 GitHub Pages · 仅用于展示说明（程序在本地运行）
-      </footer>
-    </main>
-  </body>
+            const MESSAGES = [
+                '今天也要元气满满呀',
+                '多晒晒太阳多微笑',
+                '多喝热水照顾好自己',
+                '要记得好好吃饭',
+                '偶尔也要休息一下',
+                '你真的很了不起',
+                '慢慢来一切都会好',
+                '给自己一个温柔的拥抱',
+                '保持热爱奔赴山海',
+                '小确幸正在路上啦',
+                '不许熬夜要早睡',
+                '早点休息做个好梦',
+                '好心情要常在',
+                '要对自己温柔一点',
+                '相信好事正在发生',
+                '愿你所想皆成真',
+                '记得抬头看看天空',
+                '笑一笑什么都会过去',
+                '世界偷偷准备着惊喜',
+                '今天也要好好生活',
+            ];
+
+            function pickMessages(count) {
+                const result = [];
+                for (let index = 0; index < count; index += 1) {
+                    const message = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+                    result.push(message);
+                }
+                return result;
+            }
+
+            function generateScatterPositions(count, width, height) {
+                const positions = [];
+                const cols = Math.max(1, Math.floor(width / (NOTE_WIDTH + 40)));
+                const cellWidth = width / cols;
+                const rows = Math.ceil(count / cols);
+                const cellHeight = height / rows;
+
+                for (let index = 0; index < count; index += 1) {
+                    const col = index % cols;
+                    const row = Math.floor(index / cols);
+                    const jitterX = (cellWidth - NOTE_WIDTH) / 2;
+                    const jitterY = (cellHeight - NOTE_HEIGHT) / 2;
+                    const baseX = col * cellWidth + jitterX;
+                    const baseY = row * cellHeight + jitterY;
+                    const x = baseX + (Math.random() - 0.5) * jitterX;
+                    const y = baseY + (Math.random() - 0.5) * jitterY;
+                    positions.push({ x, y });
+                }
+
+                for (let index = positions.length - 1; index > 0; index -= 1) {
+                    const swapIndex = Math.floor(Math.random() * (index + 1));
+                    const temp = positions[index];
+                    positions[index] = positions[swapIndex];
+                    positions[swapIndex] = temp;
+                }
+                return positions;
+            }
+
+            const GLOW_PADDING = 32;
+
+            function generateHeartPositions(count, width, height) {
+                const positions = [];
+                const baseScale = Math.min(
+                    (width - 4 * GLOW_PADDING - NOTE_WIDTH) / 32,
+                    (height - 6 * GLOW_PADDING - NOTE_HEIGHT) / 30,
+                );
+                const clampedScale = Math.max(18, Math.min(baseScale, 40));
+                const scaleX = clampedScale * 1.05;
+                const scaleY = clampedScale * 1.15;
+                const offsetX = width / 2;
+                const offsetY = height / 2 - 90;
+
+                for (let index = 0; index < count; index += 1) {
+                    const angle = (index / count) * Math.PI * 2;
+                    const xBase = 16 * Math.sin(angle) ** 3;
+                    const yBase =
+                        13 * Math.cos(angle)
+                        - 5 * Math.cos(2 * angle)
+                        - 2 * Math.cos(3 * angle)
+                        - Math.cos(4 * angle);
+
+                    const fillFactor = 0.7 + Math.random() * 0.3;
+                    const x = xBase * fillFactor;
+                    const y = yBase * fillFactor;
+
+                    let xPos = offsetX + x * scaleX - NOTE_WIDTH / 2;
+                    let yPos = offsetY - y * scaleY - NOTE_HEIGHT / 2;
+
+                    xPos = Math.max(GLOW_PADDING, Math.min(xPos, width - NOTE_WIDTH - GLOW_PADDING));
+                    yPos = Math.max(GLOW_PADDING, Math.min(yPos, height - NOTE_HEIGHT - GLOW_PADDING));
+
+                    positions.push({ x: xPos, y: yPos });
+                }
+                return positions;
+            }
+
+            function createWall() {
+                const layer = document.getElementById('notes-layer');
+                const centerText = document.getElementById('center-text');
+                layer.innerHTML = '';
+                centerText.classList.remove('visible');
+
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                const messages =
+                    pickMessages(NOTE_COUNT);
+                const scatterPositions =
+                    generateScatterPositions(NOTE_COUNT, width, height);
+                const heartPositions =
+                    generateHeartPositions(NOTE_COUNT, width, height);
+
+                const notes = [];
+
+                messages.forEach((text, index) => {
+                    const delay = index * CREATE_INTERVAL;
+                    setTimeout(() => {
+                        const noteElement = document.createElement('div');
+                        noteElement.className = 'note';
+                        noteElement.style.left = `${scatterPositions[index].x}px`;
+                        noteElement.style.top = `${scatterPositions[index].y}px`;
+
+                        const rotate = (Math.random() * 14 - 7).toFixed(2);
+                        noteElement.style.setProperty('--note-rotate', `${rotate}deg`);
+
+                        const inner = document.createElement('div');
+                        inner.className = 'note-inner';
+                        inner.style.background = `linear-gradient(145deg, rgba(255,255,255,0.75), ${COLORS[index % COLORS.length]})`;
+
+                        const title = document.createElement('div');
+                        title.className = 'note-title';
+                        title.textContent = 'LOVE NOTE';
+
+                        const body = document.createElement('div');
+                        body.className = 'note-body';
+                        body.textContent = text;
+
+                        inner.appendChild(title);
+                        inner.appendChild(body);
+                        noteElement.appendChild(inner);
+                        layer.appendChild(noteElement);
+
+                        requestAnimationFrame(() => {
+                            noteElement.classList.add('visible');
+                        });
+
+                        notes.push({
+                            el: noteElement,
+                            target: heartPositions[index],
+                        });
+                    }, delay);
+                });
+
+                const mergeAt = NOTE_COUNT * CREATE_INTERVAL + HEART_DELAY;
+                setTimeout(() => {
+                    notes.forEach((item, index) => {
+                        const extraDelay = index * 8;
+                        setTimeout(() => {
+                            item.el.classList.add('note-heart');
+                            item.el.style.left = `${item.target.x}px`;
+                            item.el.style.top = `${item.target.y}px`;
+                            const softRotate = (Math.random() * 6 - 3).toFixed(2);
+                            item.el.style.setProperty('--note-rotate', `${softRotate}deg`);
+                        }, extraDelay);
+                    });
+
+                    setTimeout(() => {
+                        centerText.classList.add('visible');
+                    }, 900);
+                }, mergeAt);
+            }
+
+            window.addEventListener('load', createWall);
+            window.addEventListener('resize', () => {
+                createWall();
+            });
+        }());
+    </script>
+</body>
 </html>
 

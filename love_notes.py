@@ -1,4 +1,4 @@
-import argparse
+import argparse  # 命令行参数解析
 import math
 import random
 import sys
@@ -8,19 +8,20 @@ from typing import Callable, List, Optional, Sequence, Tuple
 
 
 DEFAULT_COLORS = [
-    '#FFE1E1',
-    '#FFF5CC',
-    '#E2F4FF',
-    '#DFF8E1',
-    '#F7E2FF',
-    '#FFF0E6',
-    '#E6F8FF',
-    '#FDEBFF',
-    '#FFFAE2',
-    '#E9FFF5',
+    '#FFEAF4',  # 轻柔樱花粉
+    '#F5E9FF',  # 薄雾薰衣草
+    '#EAF6FF',  # 晨光天空蓝
+    '#EFFFF6',  # 透亮薄荷绿
+    '#FFF5E9',  # 暖暖奶杏色
+    '#FDEBFF',  # 软糖紫粉
+    '#F3F8FF',  # 云朵白蓝
+    '#FFEFF5',  # 玫瑰奶油色
+    '#E9FFF5',  # 玻璃青绿色
+    '#FFF9FF',  # 轻雾白
 ]
 
-DEFAULT_MESSAGES = [
+""" 原始默认文案（备份，不再使用）
+DEFAULT_MESSAGES_ORIGINAL = [
     '我想你了',
     '多晒晒太阳',
     '多喝水哦',
@@ -45,11 +46,36 @@ DEFAULT_MESSAGES = [
 ]
 
 
-NOTE_SHADOW_COLOR = '#FFC1CC'
-NOTE_SHADOW_ALPHA = 0.22
-NOTE_GLOW_PADDING = 18
+"""
+
+DEFAULT_MESSAGES = [
+    '今天也要元气满满呀',
+    '多晒晒太阳多微笑',
+    '多喝热水照顾好自己',
+    '要记得好好吃饭',
+    '偶尔也要休息一下',
+    '你真的很了不起',
+    '慢慢来一切都会好',
+    '给自己一个温柔的拥抱',
+    '保持热爱奔赴山海',
+    '小确幸正在路上啦',
+    '不许熬夜要早睡',
+    '早点休息做个好梦',
+    '好心情要常在',
+    '要对自己温柔一点',
+    '相信好事正在发生',
+    '愿你所想皆成真',
+    '记得抬头看看天空',
+    '笑一笑什么都会过去',
+    '世界偷偷准备着惊喜',
+    '今天也要好好生活',
+]
+
+NOTE_SHADOW_COLOR = '#F7C6FF'
+NOTE_SHADOW_ALPHA = 0.32
+NOTE_GLOW_PADDING = 22
 FADE_INTERVAL_MS = 20
-FADE_IN_DURATION_MS = 500
+FADE_IN_DURATION_MS = 650
 
 
 def load_messages(messages_path: Optional[str]) -> List[str]:
@@ -177,14 +203,14 @@ class StickyNote(tk.Toplevel):
         self._on_close = on_close
         self._shadow = create_shadow_window(self, padding=NOTE_GLOW_PADDING, alpha=0.0)
 
-        title_color = lighten_color(color, 0.4)
+        title_color = lighten_color(color, 0.6)
         border_frame = tk.Frame(
             self,
             bg=color,
             bd=0,
-            highlightthickness=1,
-            highlightbackground=lighten_color(color, 0.25),
-            highlightcolor=lighten_color(color, 0.25),
+            highlightthickness=2,
+            highlightbackground=lighten_color(color, 0.45),
+            highlightcolor=lighten_color(color, 0.45),
         )
         border_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -224,17 +250,21 @@ class StickyNote(tk.Toplevel):
             0,
             width - 36,
             height - 50,
-            start_color=lighten_color(color, 0.05),
-            end_color=lighten_color(color, 0.25),
+            start_color=lighten_color(color, 0.18),
+            end_color=lighten_color(color, 0.55),
             tag='note-bg',
         )
 
-        text_font = tkfont.Font(family='Microsoft YaHei', size=font_size)
+        text_font = tkfont.Font(
+            family='Microsoft YaHei',
+            size=font_size,
+            weight='normal',
+        )
         text_label = tk.Label(
             body_canvas,
             text=text,
             bg=color,
-            fg='#2A2A2A',
+            fg='#6A4C6F',
             justify=tk.LEFT,
             anchor='nw',
             wraplength=width - 64,
@@ -288,7 +318,8 @@ class StickyNote(tk.Toplevel):
 
     def fade_in(self, duration_ms: int, on_complete: Optional[Callable[[], None]] = None) -> None:
         steps = max(1, duration_ms // FADE_INTERVAL_MS)
-        increment = 1.0 / steps
+        max_alpha = 0.94
+        increment = max_alpha / steps
 
         def step(index: int = 0) -> None:
             if not self.winfo_exists():
@@ -296,17 +327,20 @@ class StickyNote(tk.Toplevel):
                     on_complete()
                 return
 
-            new_alpha = min(1.0, (index + 1) * increment)
+            new_alpha = min(max_alpha, (index + 1) * increment)
             self.attributes('-alpha', new_alpha)
             if self._shadow is not None and self._shadow.winfo_exists():
-                self._shadow.attributes('-alpha', min(NOTE_SHADOW_ALPHA, new_alpha * NOTE_SHADOW_ALPHA))
+                self._shadow.attributes(
+                    '-alpha',
+                    min(NOTE_SHADOW_ALPHA, new_alpha * NOTE_SHADOW_ALPHA),
+                )
 
-            if new_alpha >= 1.0:
+            if new_alpha >= max_alpha:
                 if on_complete is not None:
                     on_complete()
             else:
                 self.after(FADE_INTERVAL_MS, lambda: step(index + 1))
-        
+
         step()
 
     def animate_to_position(
@@ -340,17 +374,17 @@ class StickyNote(tk.Toplevel):
 
             new_x = start_x + (target_x - start_x) * eased_progress
             new_y = start_y + (target_y - start_y) * eased_progress
-            
+
             rotation_angle = progress * total_rotation
             angle_rad = math.radians(rotation_angle)
-            swing_factor = (1 - eased_progress) * 5
-            offset_x = math.sin(angle_rad * 4) * swing_factor
-            offset_y = math.cos(angle_rad * 4) * swing_factor
-            
+            swing_factor = (1 - eased_progress) * 3.0
+            offset_x = math.sin(angle_rad * 3) * swing_factor
+            offset_y = math.cos(angle_rad * 3) * swing_factor
+
             self.geometry(f'+{int(new_x + offset_x)}+{int(new_y + offset_y)}')
             update_shadow_geometry(self._shadow, self, NOTE_GLOW_PADDING, NOTE_SHADOW_COLOR)
 
-            if progress >= 1.0:
+            if index + 1 >= steps:
                 self.geometry(f'+{int(target_x)}+{int(target_y)}')
                 update_shadow_geometry(self._shadow, self, NOTE_GLOW_PADDING, NOTE_SHADOW_COLOR)
                 if on_complete:
@@ -416,26 +450,43 @@ def generate_heart_positions(
 ) -> List[Tuple[int, int]]:
     if count <= 0:
         return []
-    
+
     positions: List[Tuple[int, int]] = []
-    scale_x, scale_y = 25, 28
+    # 根据屏幕与便签尺寸自适应缩放，让爱心更饱满
+    base_scale = min(
+        (screen_width - 4 * NOTE_GLOW_PADDING - note_width) / 32.0,
+        (screen_height - 6 * NOTE_GLOW_PADDING - note_height) / 30.0,
+    )
+    base_scale = max(18.0, min(base_scale, 40.0))
+    scale_x = base_scale * 1.05
+    scale_y = base_scale * 1.15
     offset_x = screen_width / 2
     offset_y = screen_height / 2 - 120
-    
+
     for i in range(count):
-        angle = (i / count) * 360
-        rad = math.radians(angle)
-        x = 16 * math.sin(rad) ** 3
-        y = 13 * math.cos(rad) - 5 * math.cos(2 * rad) - 2 * math.cos(3 * rad) - math.cos(4 * rad)
-        
+        angle = (i / count) * 2.0 * math.pi
+        rad = angle
+        outline_x = 16 * math.sin(rad) ** 3
+        outline_y = (
+            13 * math.cos(rad)
+            - 5 * math.cos(2 * rad)
+            - 2 * math.cos(3 * rad)
+            - math.cos(4 * rad)
+        )
+
+        # 内缩一点点，让爱心不是单薄一圈，而是略微填充的形状
+        fill_factor = 0.7 + 0.3 * random.random()
+        x = outline_x * fill_factor
+        y = outline_y * fill_factor
+
         pos_x = offset_x + x * scale_x - note_width / 2
         pos_y = offset_y - y * scale_y - note_height / 2
-        
+
         pos_x = max(NOTE_GLOW_PADDING, min(pos_x, screen_width - note_width - NOTE_GLOW_PADDING))
         pos_y = max(NOTE_GLOW_PADDING, min(pos_y, screen_height - note_height - NOTE_GLOW_PADDING))
-        
+
         positions.append((int(pos_x), int(pos_y)))
-    
+
     return positions
 
 
@@ -550,8 +601,14 @@ class StickyWallApp:
 
         for i, note in enumerate(active_notes):
             target_x, target_y = heart_positions[i]
-            rotation_count = 1.5 + random.random() * 1.5
-            note.animate_to_position(target_x, target_y, 500, rotation_count, on_complete=on_anim_complete)
+            rotation_count = 0.8 + random.random() * 0.7
+            note.animate_to_position(
+                target_x,
+                target_y,
+                520,
+                rotation_count,
+                on_complete=on_anim_complete,
+            )
 
     def _show_center_text(self) -> None:
         if self._center_text_window is not None:
@@ -571,21 +628,23 @@ class StickyWallApp:
         canvas = tk.Canvas(text_window, highlightthickness=0, bg='black')
         canvas.pack(fill=tk.BOTH, expand=True)
 
-        # 创建带阴影的文字
+        # 创建带柔光的中心文字
         shadow_text = canvas.create_text(
-            0, 0,
+            0,
+            0,
             text=self.center_message,
-            fill='#800000',
-            font=('Microsoft YaHei', 48, 'bold'),
-            anchor='center'
+            fill='#E6C8FF',
+            font=('Microsoft YaHei', 52, 'bold'),
+            anchor='center',
         )
-        
+
         main_text = canvas.create_text(
-            0, 0,
+            0,
+            0,
             text=self.center_message,
-            fill='#FF6B9D',
-            font=('Microsoft YaHei', 48, 'bold'),
-            anchor='center'
+            fill='#FFE6FA',
+            font=('Microsoft YaHei', 52, 'bold'),
+            anchor='center',
         )
 
         # 获取文字边界
@@ -627,6 +686,7 @@ class StickyWallApp:
             pass
 
 
+""" 旧的 main 函数（保留备份，不再使用）
 def main() -> None:
     parser = argparse.ArgumentParser(description='生成类似便签墙的桌面窗口')
     parser.add_argument('--messages', type=str, help='包含便签内容的文本文件，每行一条消息')
@@ -648,6 +708,120 @@ def main() -> None:
     messages = load_messages(args.messages)
     if not messages:
         print('缺少可用的便签内容。', file=sys.stderr)
+        sys.exit(1)
+
+    root = tk.Tk()
+    root.withdraw()
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    positions = generate_positions(
+        count=args.count,
+        note_width=args.width,
+        note_height=args.height,
+        screen_width=screen_width,
+        screen_height=screen_height,
+    )
+
+    texts = pick_messages(messages, len(positions))
+
+    StickyWallApp(
+        root=root,
+        texts=texts,
+        positions=positions,
+        width=args.width,
+        height=args.height,
+        font_size=args.font_size,
+        stay_on_top=not args.no_topmost,
+        title_text=args.title,
+        interval_ms=args.interval,
+        center_message=args.center_text,
+        auto_close_ms=args.auto_close_ms,
+    )
+
+    root.mainloop()
+
+
+"""
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description='生成一面温柔可爱的便签墙',
+    )
+    parser.add_argument(
+        '--messages',
+        type=str,
+        help='包含便签内容的 UTF-8 文本文件，每行一条消息',
+    )
+    parser.add_argument(
+        '--count',
+        type=int,
+        default=80,
+        help='便签数量',
+    )
+    parser.add_argument(
+        '--width',
+        type=int,
+        default=260,
+        help='单个便签的宽度（像素）',
+    )
+    parser.add_argument(
+        '--height',
+        type=int,
+        default=160,
+        help='单个便签的高度（像素）',
+    )
+    parser.add_argument(
+        '--font-size',
+        type=int,
+        default=16,
+        help='便签正文的字号（像素）',
+    )
+    parser.add_argument(
+        '--no-topmost',
+        action='store_true',
+        help='不要让便签置顶显示',
+    )
+    parser.add_argument(
+        '--seed',
+        type=int,
+        help='指定随机种子以复现布局',
+    )
+    parser.add_argument(
+        '--title',
+        type=str,
+        default='',
+        help='便签标题栏文字',
+    )
+    parser.add_argument(
+        '--interval',
+        type=int,
+        default=150,
+        help='逐个显示便签的时间间隔（毫秒）',
+    )
+    parser.add_argument(
+        '--center-text',
+        type=str,
+        default='要每天都开开心心呀',
+        help='爱心中心显示的文案',
+    )
+    parser.add_argument(
+        '--auto-close-ms',
+        type=int,
+        default=3000,
+        help='爱心显示后自动退出的时间（毫秒，小于等于 0 则不自动退出）',
+    )
+
+    args = parser.parse_args()
+
+    if args.seed is not None:
+        random.seed(args.seed)
+
+    messages = load_messages(args.messages)
+    if not messages:
+        print('缺少可用的便签内容，请检查输入。', file=sys.stderr)
         sys.exit(1)
 
     root = tk.Tk()

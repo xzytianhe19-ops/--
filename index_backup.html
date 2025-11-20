@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <title>小小便利贴 · Love Notes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f8fafc;
+        --card-bg: #ffffff;
+        --accent: #f97373;
+        --accent-soft: #ffe4e4;
+        --text-main: #111827;
+        --text-sub: #6b7280;
+        --border-soft: #e5e7eb;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "Microsoft YaHei", sans-serif;
+        background: radial-gradient(circle at top left, #ffe4e4 0, #f8fafc 40%, #e0f2fe 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
+        color: var(--text-main);
+      }
+      .shell {
+        max-width: 860px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 24px;
+        box-shadow:
+          0 24px 60px rgba(15, 23, 42, 0.18),
+          0 0 0 1px rgba(148, 163, 184, 0.18);
+        padding: 28px 26px 26px;
+        backdrop-filter: blur(18px);
+      }
+      h1 {
+        margin: 0;
+        font-size: 26px;
+        letter-spacing: 0.03em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      h1 span.badge {
+        font-size: 12px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        border: 1px solid var(--accent);
+      }
+      .subtitle {
+        margin-top: 8px;
+        font-size: 14px;
+        color: var(--text-sub);
+      }
+      .grid {
+        margin-top: 22px;
+        display: grid;
+        gap: 16px;
+      }
+      @media (min-width: 720px) {
+        .grid {
+          grid-template-columns: minmax(0, 3fr) minmax(0, 2.3fr);
+        }
+      }
+      .card {
+        background: var(--card-bg);
+        border-radius: 18px;
+        padding: 18px 18px 16px;
+        border: 1px solid var(--border-soft);
+      }
+      .card-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .card-desc {
+        font-size: 13px;
+        color: var(--text-sub);
+        line-height: 1.7;
+      }
+      .list {
+        margin: 10px 0 0;
+        padding-left: 20px;
+        font-size: 13px;
+        color: var(--text-sub);
+        line-height: 1.7;
+      }
+      .list code {
+        font-size: 12px;
+        background: #f9fafb;
+        border-radius: 999px;
+        padding: 2px 6px;
+      }
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .pill {
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #f9fafb;
+        border: 1px dashed #e5e7eb;
+        color: #4b5563;
+      }
+      footer {
+        margin-top: 18px;
+        font-size: 11px;
+        color: #9ca3af;
+        text-align: right;
+      }
+      a {
+        color: #2563eb;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <h1>
+          小小便利贴
+          <span class="badge">Desktop · Python · Tkinter</span>
+        </h1>
+        <p class="subtitle">
+          这不是网页小程序，而是可以在电脑桌面上弹出暖心便签的 Python 小工具。GitHub Pages 只负责托管这个说明页面，
+          真正的程序需要在本地运行。
+        </p>
+      </header>
+
+      <section class="grid">
+        <article class="card">
+          <div class="card-title">如何运行「暖心便利贴」程序？</div>
+          <p class="card-desc">
+            仓库中目前有两个主程序文件：
+          </p>
+          <ul class="list">
+            <li><code>love_notes.py</code> – 新版暖心便签，更多优化和文案</li>
+            <li><code>sticky_notes.py</code> – 初版便利贴效果</li>
+          </ul>
+          <p class="card-desc">
+            在 Windows 上的推荐使用方式：
+          </p>
+          <ol class="list">
+            <li>先安装 <strong>Python 3.10+</strong>
+              （从 <a href="https://www.python.org/downloads/" target="_blank">python.org</a> 安装）。
+            </li>
+            <li>把这个仓库克隆或下载到本地，例如桌面某个文件夹。</li>
+            <li>在该文件夹空白处按住 <code>Shift</code> 并右键 → 选择“在终端中打开”。</li>
+            <li>在终端中输入：<code>python love_notes.py</code> 然后回车。</li>
+          </ol>
+          <p class="card-desc">
+            如果系统里有多个 Python 版本，可以尝试 <code>python3</code> 或 <code>py</code> 命令。
+          </p>
+        </article>
+
+        <aside class="card">
+          <div class="card-title">小提示 & 自定义文案</div>
+          <p class="card-desc">
+            程序内置了一些中文暖心句子，你也可以自己准备一份
+            <code>.txt</code> 文件，每一行是一条小句子，然后在终端中使用：
+          </p>
+          <p class="card-desc">
+            <code>python love_notes.py --messages 我的文案.txt</code>
+          </p>
+          <p class="card-desc">
+            这样每次弹出的便利贴，就会随机从你提供的文案中选择一条。
+          </p>
+          <div class="pill-row">
+            <div class="pill">随机颜色小便签</div>
+            <div class="pill">渐隐渐显动画</div>
+            <div class="pill">可拖拽移动</div>
+            <div class="pill">支持自定义文案</div>
+          </div>
+        </aside>
+      </section>
+
+      <footer>
+        部署于 GitHub Pages · 仅用于展示说明（程序在本地运行）
+      </footer>
+    </main>
+  </body>
+</html>
+
